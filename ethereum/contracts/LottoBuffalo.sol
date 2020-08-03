@@ -9,7 +9,7 @@ import "openzeppelin-solidity/contracts/access/Ownable.sol";
  * @dev This contract is designed to work on multiple networks, including
  * local test networks
  */
-contract MyContract is ChainlinkClient, Ownable {
+contract LottoBuffalo is ChainlinkClient, Ownable {
     uint256 public data;
 
     /**
