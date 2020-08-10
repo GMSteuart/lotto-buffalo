@@ -195,8 +195,4 @@ contract LottoBuffalo is ChainlinkClient, Ownable {
     function isFinished() public view returns (bool) {
         return stage == Stages.FINISHED;
     }
-
-    function getLastResult() public view returns (bool) {
-        return RANDOMRESULT;
-    }
 }

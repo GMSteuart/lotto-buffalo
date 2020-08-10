@@ -11,7 +11,7 @@ SET standard_conforming_strings = on;
 -- Drop databases (except postgres and template1)
 --
 
-DROP DATABASE node_dev;
+-- DROP DATABASE node_dev;
 
 
 
@@ -20,15 +20,15 @@ DROP DATABASE node_dev;
 -- Drop roles
 --
 
-DROP ROLE postgres;
+-- DROP ROLE postgres;
 
 
 --
 -- Roles
 --
 
-CREATE ROLE postgres;
-ALTER ROLE postgres WITH SUPERUSER INHERIT CREATEROLE CREATEDB LOGIN REPLICATION BYPASSRLS PASSWORD 'md514231b87c4109a5bc000d2a0cdb430f8';
+-- CREATE ROLE postgres;
+-- ALTER ROLE postgres WITH SUPERUSER INHERIT CREATEROLE CREATEDB LOGIN REPLICATION BYPASSRLS PASSWORD 'md514231b87c4109a5bc000d2a0cdb430f8';
 
 
 
@@ -50,107 +50,107 @@ ALTER ROLE postgres WITH SUPERUSER INHERIT CREATEROLE CREATEDB LOGIN REPLICATION
 -- Dumped from database version 12.3 (Debian 12.3-1.pgdg100+1)
 -- Dumped by pg_dump version 12.3 (Debian 12.3-1.pgdg100+1)
 
-SET statement_timeout = 0;
-SET lock_timeout = 0;
-SET idle_in_transaction_session_timeout = 0;
-SET client_encoding = 'UTF8';
-SET standard_conforming_strings = on;
-SELECT pg_catalog.set_config('search_path', '', false);
-SET check_function_bodies = false;
-SET xmloption = content;
-SET client_min_messages = warning;
-SET row_security = off;
+-- SET statement_timeout = 0;
+-- SET lock_timeout = 0;
+-- SET idle_in_transaction_session_timeout = 0;
+-- SET client_encoding = 'UTF8';
+-- SET standard_conforming_strings = on;
+-- SELECT pg_catalog.set_config('search_path', '', false);
+-- SET check_function_bodies = false;
+-- SET xmloption = content;
+-- SET client_min_messages = warning;
+-- SET row_security = off;
 
-UPDATE pg_catalog.pg_database SET datistemplate = false WHERE datname = 'template1';
-DROP DATABASE template1;
---
--- Name: template1; Type: DATABASE; Schema: -; Owner: postgres
---
+-- UPDATE pg_catalog.pg_database SET datistemplate = false WHERE datname = 'template1';
+-- DROP DATABASE template1;
+-- --
+-- -- Name: template1; Type: DATABASE; Schema: -; Owner: postgres
+-- --
 
-CREATE DATABASE template1 WITH TEMPLATE = template0 ENCODING = 'UTF8' LC_COLLATE = 'en_US.utf8' LC_CTYPE = 'en_US.utf8';
-
-
-ALTER DATABASE template1 OWNER TO postgres;
-
-\connect template1
-
-SET statement_timeout = 0;
-SET lock_timeout = 0;
-SET idle_in_transaction_session_timeout = 0;
-SET client_encoding = 'UTF8';
-SET standard_conforming_strings = on;
-SELECT pg_catalog.set_config('search_path', '', false);
-SET check_function_bodies = false;
-SET xmloption = content;
-SET client_min_messages = warning;
-SET row_security = off;
-
---
--- Name: DATABASE template1; Type: COMMENT; Schema: -; Owner: postgres
---
-
-COMMENT ON DATABASE template1 IS 'default template for new databases';
+-- CREATE DATABASE template1 WITH TEMPLATE = template0 ENCODING = 'UTF8' LC_COLLATE = 'en_US.utf8' LC_CTYPE = 'en_US.utf8';
 
 
---
--- Name: template1; Type: DATABASE PROPERTIES; Schema: -; Owner: postgres
---
+-- ALTER DATABASE template1 OWNER TO postgres;
 
-ALTER DATABASE template1 IS_TEMPLATE = true;
+-- \connect template1
 
+-- SET statement_timeout = 0;
+-- SET lock_timeout = 0;
+-- SET idle_in_transaction_session_timeout = 0;
+-- SET client_encoding = 'UTF8';
+-- SET standard_conforming_strings = on;
+-- SELECT pg_catalog.set_config('search_path', '', false);
+-- SET check_function_bodies = false;
+-- SET xmloption = content;
+-- SET client_min_messages = warning;
+-- SET row_security = off;
 
-\connect template1
+-- --
+-- -- Name: DATABASE template1; Type: COMMENT; Schema: -; Owner: postgres
+-- --
 
-SET statement_timeout = 0;
-SET lock_timeout = 0;
-SET idle_in_transaction_session_timeout = 0;
-SET client_encoding = 'UTF8';
-SET standard_conforming_strings = on;
-SELECT pg_catalog.set_config('search_path', '', false);
-SET check_function_bodies = false;
-SET xmloption = content;
-SET client_min_messages = warning;
-SET row_security = off;
-
---
--- Name: DATABASE template1; Type: ACL; Schema: -; Owner: postgres
---
-
-REVOKE CONNECT,TEMPORARY ON DATABASE template1 FROM PUBLIC;
-GRANT CONNECT ON DATABASE template1 TO PUBLIC;
+-- COMMENT ON DATABASE template1 IS 'default template for new databases';
 
 
---
--- PostgreSQL database dump complete
---
+-- --
+-- -- Name: template1; Type: DATABASE PROPERTIES; Schema: -; Owner: postgres
+-- --
 
---
--- Database "node_dev" dump
---
+-- ALTER DATABASE template1 IS_TEMPLATE = true;
 
---
--- PostgreSQL database dump
---
 
--- Dumped from database version 12.3 (Debian 12.3-1.pgdg100+1)
--- Dumped by pg_dump version 12.3 (Debian 12.3-1.pgdg100+1)
+-- \connect template1
 
-SET statement_timeout = 0;
-SET lock_timeout = 0;
-SET idle_in_transaction_session_timeout = 0;
-SET client_encoding = 'UTF8';
-SET standard_conforming_strings = on;
-SELECT pg_catalog.set_config('search_path', '', false);
-SET check_function_bodies = false;
-SET xmloption = content;
-SET client_min_messages = warning;
-SET row_security = off;
+-- SET statement_timeout = 0;
+-- SET lock_timeout = 0;
+-- SET idle_in_transaction_session_timeout = 0;
+-- SET client_encoding = 'UTF8';
+-- SET standard_conforming_strings = on;
+-- SELECT pg_catalog.set_config('search_path', '', false);
+-- SET check_function_bodies = false;
+-- SET xmloption = content;
+-- SET client_min_messages = warning;
+-- SET row_security = off;
 
---
--- Name: node_dev; Type: DATABASE; Schema: -; Owner: postgres
---
+-- --
+-- -- Name: DATABASE template1; Type: ACL; Schema: -; Owner: postgres
+-- --
 
-CREATE DATABASE node_dev WITH TEMPLATE = template0 ENCODING = 'UTF8' LC_COLLATE = 'en_US.utf8' LC_CTYPE = 'en_US.utf8';
+-- REVOKE CONNECT,TEMPORARY ON DATABASE template1 FROM PUBLIC;
+-- GRANT CONNECT ON DATABASE template1 TO PUBLIC;
+
+
+-- --
+-- -- PostgreSQL database dump complete
+-- --
+
+-- --
+-- -- Database "node_dev" dump
+-- --
+
+-- --
+-- -- PostgreSQL database dump
+-- --
+
+-- -- Dumped from database version 12.3 (Debian 12.3-1.pgdg100+1)
+-- -- Dumped by pg_dump version 12.3 (Debian 12.3-1.pgdg100+1)
+
+-- SET statement_timeout = 0;
+-- SET lock_timeout = 0;
+-- SET idle_in_transaction_session_timeout = 0;
+-- SET client_encoding = 'UTF8';
+-- SET standard_conforming_strings = on;
+-- SELECT pg_catalog.set_config('search_path', '', false);
+-- SET check_function_bodies = false;
+-- SET xmloption = content;
+-- SET client_min_messages = warning;
+-- SET row_security = off;
+
+-- --
+-- -- Name: node_dev; Type: DATABASE; Schema: -; Owner: postgres
+-- --
+
+-- CREATE DATABASE node_dev WITH TEMPLATE = template0 ENCODING = 'UTF8' LC_COLLATE = 'en_US.utf8' LC_CTYPE = 'en_US.utf8';
 
 
 ALTER DATABASE node_dev OWNER TO postgres;
