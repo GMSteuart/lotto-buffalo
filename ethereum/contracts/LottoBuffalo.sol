@@ -1,7 +1,12 @@
-pragma solidity 0.6.6;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.6.6;
 
 import "@chainlink/contracts/src/v0.6/ChainlinkClient.sol";
 import "openzeppelin-solidity/contracts/access/Ownable.sol";
+import "openzeppelin-solidity/contracts/utils/EnumerableSet.sol";
+
+import {Governance} from "./interfaces/Governance.sol";
+import {Randomness} from "./interfaces/Randomness.sol";
 
 /**
  * @title MyContract is an example contract which requests data from
@@ -10,7 +15,60 @@ import "openzeppelin-solidity/contracts/access/Ownable.sol";
  * local test networks
  */
 contract LottoBuffalo is ChainlinkClient, Ownable {
+    using EnumerableSet for EnumerableSet.AddressSet;
+
+    struct GameHistory {
+        // Feasible to play more than 4,294,967,295 games?
+        uint32 played;
+    }
+
+    struct Player {
+        uint256 id;
+        GameHistory gameHistory;
+    }
+
+    enum Stages {OPEN, CLOSED, FINISHED}
+
+    address payable[] public players;
+    mapping(address => uint256) playerIdsByAddress;
+
+    Governance public governance;
+    // .01 ETH
+    uint256 public MINIMUM = 1000000000000000;
+    // 0.1 LINK
+    uint256 public ORACLE_PAYMENT = 1000000000000000000;
+    // Alarm stuff
+    address private CHAINLINK_ALARM_ORACLE;
+    bytes32 private CHAINLINK_ALARM_JOB_ID = "778633ef18884692adc1fe9592107957";
+    // VRF stuff
+    // bytes32 internal _keyHash;
+    uint256 public RANDOMRESULT;
+
+    /**
+     * The current lottery id.
+     */
+    uint256 public id = 0;
+
     uint256 public data;
+
+    Stages private stage;
+
+    event Open(uint256 _id, address indexed _from, uint256 _duration);
+    event Close(uint256 _id);
+    event Winner(
+        uint256 _id,
+        uint256 _randomness,
+        uint256 _index,
+        address indexed _from,
+        uint256 _amount
+    );
+    event PlayerJoined(uint256 _id, address indexed _from);
+
+    modifier atStage(Stages _stage) {
+        // string(abi.encodePacked(_.name, " can only be called at stage: ", _stage, "\n Current stage: ", stage))
+        require(stage == _stage, "Function cannot be called at this time.");
+        _;
+    }
 
     /**
      * @notice Deploy the contract with a specified address for the LINK
@@ -18,12 +76,78 @@ contract LottoBuffalo is ChainlinkClient, Ownable {
      * @dev Sets the storage for the specified addresses
      * @param _link The address of the LINK token contract
      */
-    constructor(address _link) public {
+    constructor(
+        address _governance,
+        address _link,
+        address _alarmOracle
+    ) public {
         if (_link == address(0)) {
             setPublicChainlinkToken();
         } else {
             setChainlinkToken(_link);
         }
+
+        governance = Governance(_governance);
+        id = 1;
+        stage = Stages.CLOSED;
+
+        CHAINLINK_ALARM_ORACLE = _alarmOracle;
+    }
+
+    function join() public payable atStage(Stages.OPEN) {
+        assert(msg.value == MINIMUM);
+        players.push(msg.sender);
+        // TODO: check that player is not already in lottery
+        emit PlayerJoined(id, msg.sender);
+    }
+
+    /**
+     * Opens the lottery allowing players to join.
+     *
+     * Sends a request to the Chainlink alarm oracle that will automatically
+     * close the lottery based off the duration passed.
+     *
+     * @param duration the length in time the lottery will be open.
+     */
+    function open(uint256 duration) public atStage(Stages.CLOSED) {
+        Chainlink.Request memory req = buildChainlinkRequest(
+            CHAINLINK_ALARM_JOB_ID,
+            address(this),
+            this.fulfill.selector
+        );
+
+        req.addUint("until", now + duration);
+        sendChainlinkRequestTo(CHAINLINK_ALARM_ORACLE, req, ORACLE_PAYMENT);
+        stage = Stages.OPEN;
+        emit Open(id, msg.sender, duration);
+    }
+
+    function fulfill(bytes32 requestId)
+        public
+        atStage(Stages.OPEN)
+        recordChainlinkFulfillment(requestId)
+    {
+        // TODO: add a require here so that only the oracle contract can
+        // call the fulfill alarm method
+        stage = Stages.FINISHED;
+        Randomness(governance.randomness()).getLotteryNumber(id, id);
+        id = id + 1;
+    }
+
+    function close(uint256 randomness) external atStage(Stages.FINISHED) {
+        require(randomness > 0, "random-not-found");
+
+        uint256 index = randomness % players.length;
+        uint256 amount = address(this).balance;
+        // all units of transfer are in wei
+        players[index].transfer(amount);
+        emit Winner(id, randomness, index, players[index], amount);
+        // reset players
+        // TODO: reset lobbies/groups rather than players
+        players = new address payable[](0);
+        stage = Stages.CLOSED;
+        emit Close(id);
+        // open(5 minutes);
     }
 
     /**
@@ -35,79 +159,44 @@ contract LottoBuffalo is ChainlinkClient, Ownable {
         return chainlinkTokenAddress();
     }
 
-    /**
-     * @notice Creates a request to the specified Oracle contract address
-     * @dev This function ignores the stored Oracle contract address and
-     * will instead send the request to the address specified
-     * @param _oracle The Oracle contract address to send the request to
-     * @param _jobId The bytes32 JobID to be executed
-     * @param _url The URL to fetch data from
-     * @param _path The dot-delimited path to parse of the response
-     * @param _times The number to multiply the result by
-     */
-    function createRequestTo(
-        address _oracle,
-        bytes32 _jobId,
-        uint256 _payment,
-        string memory _url,
-        string memory _path,
-        int256 _times
-    ) public onlyOwner returns (bytes32 requestId) {
-        Chainlink.Request memory req = buildChainlinkRequest(
-            _jobId,
-            address(this),
-            this.fulfill.selector
-        );
-        req.add("url", _url);
-        req.add("path", _path);
-        req.addInt("times", _times);
-        requestId = sendChainlinkRequestTo(_oracle, req, _payment);
+    function getPlayer(address _player) public view returns (address payable) {
+        uint256 _playerId = playerIdsByAddress[_player];
+        return players[_playerId];
     }
 
-    /**
-     * @notice The fulfill method from requests created by this contract
-     * @dev The recordChainlinkFulfillment protects this function from being called
-     * by anyone other than the oracle address that the request was sent to
-     * @param _requestId The ID that was generated for the request
-     * @param _data The answer provided by the oracle
-     */
-    function fulfill(bytes32 _requestId, uint256 _data)
-        public
-        recordChainlinkFulfillment(_requestId)
-    {
-        data = _data;
+    function getAlarmAddress() public view returns (address) {
+        return CHAINLINK_ALARM_ORACLE;
     }
 
-    /**
-     * @notice Allows the owner to withdraw any LINK balance on the contract
-     */
-    function withdrawLink() public onlyOwner {
-        LinkTokenInterface link = LinkTokenInterface(chainlinkTokenAddress());
-        require(
-            link.transfer(msg.sender, link.balanceOf(address(this))),
-            "Unable to transfer"
-        );
+    function getAlarmJobId() public view returns (bytes32) {
+        return CHAINLINK_ALARM_JOB_ID;
     }
 
-    /**
-     * @notice Call this method if no response is received within 5 minutes
-     * @param _requestId The ID that was generated for the request to cancel
-     * @param _payment The payment specified for the request to cancel
-     * @param _callbackFunctionId The bytes4 callback function ID specified for
-     * the request to cancel
-     * @param _expiration The expiration generated for the request to cancel
-     */
-    function cancelRequest(
-        bytes32 _requestId,
-        uint256 _payment,
-        bytes4 _callbackFunctionId,
-        uint256 _expiration
-    ) public onlyOwner {
-        cancelChainlinkRequest(
-            _requestId,
-            _payment,
-            _callbackFunctionId,
-            _expiration
-        );
+    function getPlayers() public view returns (address payable[] memory) {
+        return players;
+    }
+
+    function getPlayerCount() public view returns (uint256) {
+        return players.length;
+    }
+
+    function getLotteryAmount() public view returns (uint256) {
+        return address(this).balance;
+    }
+
+    function isOpen() public view returns (bool) {
+        return stage == Stages.OPEN;
+    }
+
+    function isClosed() public view returns (bool) {
+        return stage == Stages.CLOSED;
+    }
+
+    function isFinished() public view returns (bool) {
+        return stage == Stages.FINISHED;
+    }
+
+    function getLastResult() public view returns (bool) {
+        return RANDOMRESULT;
     }
 }

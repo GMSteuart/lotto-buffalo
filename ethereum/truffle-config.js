@@ -10,10 +10,10 @@ const RPC_URL =
 
 module.exports = {
   networks: {
-    cldev: {
+    ganache: {
       host: '127.0.0.1',
-      // port: 8545, // truffle develop
-      port: 7545, // ganache
+      port: 8545, // ganache-cli
+      // port: 7545, // ganache
       network_id: '*',
       websockets: true
     },

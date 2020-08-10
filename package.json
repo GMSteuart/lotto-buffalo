@@ -1,0 +1,19 @@
+{
+  "name": "lotto-buffalo",
+  "version": "0.0.0",
+  "description": "A Colorado Lottery Game Jam project",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GMSteuart/lotto-buffalo.git"
+  },
+  "author": "Grant Steuart <gmsteuart@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/GMSteuart/lotto-buffalo/issues"
+  },
+  "homepage": "https://github.com/GMSteuart/lotto-buffalo#readme"
+}

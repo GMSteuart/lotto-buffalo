@@ -16,6 +16,15 @@ Or
 yarn install
 ```
 
+## Quick Stack
+
+```bash
+npm run migrate:dev
+truffle exec scripts/fund-contract.js --network ganache 
+truffle exec scripts/get-random-number.js --network ganache
+truffle exec scripts/enter-lottery.js --network ganache
+```
+
 ## Test
 
 ```bash
@@ -29,10 +38,6 @@ to a different port. It assumes any network is running the RPC port on 8545.
 
 ```bash
 npm run migrate:dev
-```
-
-```bash
-truffle exec scripts/fund-contract.js --network cldev
 ```
 
 For deploying to live networks, Truffle will use `truffle-hdwallet-provider` for your mnemonic and an RPC URL. Set your environment variables `$RPC_URL` and `$MNEMONIC` before running:
@@ -52,29 +57,21 @@ There are 3 helper scripts provided with this box in the scripts directory:
 They can be used by calling them from `npx truffle exec`, for example:
 
 ```bash
-npx truffle exec scripts/fund-contract.js --network cldev
-```
+$ npx truffle exec scripts/fund-contract.js --network cldev
+Using network 'ganache'.
 
-The CLI will output something similar to the following:
-
-```
-Using network 'live'.
-
-Funding contract: 0x972DB80842Fdaf6015d80954949dBE0A1700705E
-0xd81fcf7bfaf8660149041c823e843f0b2409137a1809a0319d26db9ceaeef650
-Truffle v5.0.25 (core: 5.0.25)
-Node v10.16.3
+LottoBuffal: 0xB4cda44F1b6538D831b8C7df9c6D5ee4812E7f8D
+RandomNumberConsumer: 0xB5cEeb954f9bAD6C4B3043DD6C157A29C1F1347f
+tokenAddress: 0xA9134FeCCa04864B4004fA6ac0c1fF93034B0763
+0x1700f30654b17a5f00f2e6141b5ba37299414724d526d4b5805958fd082be43c
+Truffle v5.1.37 (core: 5.1.37)
+Node v14.2.0
 ```
 
 In the `request-data.js` script, example parameters are provided for you. You can change the oracle address, Job ID, and parameters based on the information available on [our documentation](https://docs.chain.link/docs/testnet-oracles).
 
 ```bash
-npx truffle exec scripts/request-data.js --network live
-```
-
-This creates a request and will return the transaction ID, for example:
-
-```
+$ npx truffle exec scripts/request-data.js --network live
 Using network 'live'.
 
 Creating request on contract: 0x972DB80842Fdaf6015d80954949dBE0A1700705E
@@ -86,15 +83,15 @@ Node v10.16.3
 After creating a request on a live network, you will want to wait 3 blocks for the Chainlink node to respond. Then call the `read-contract.js` script to read the contract's state.
 
 ```bash
-npx truffle exec scripts/read-contract.js --network live
-```
-
-Once the oracle has responded, you will receive a value similar to the one below:
-
-```
+$ npx truffle exec scripts/read-contract.js --network live
 Using network 'live'.
 
 21568
 Truffle v5.0.25 (core: 5.0.25)
 Node v10.16.3
+```
+
+```bash
+$ truffle exec scripts/get-random-number.js --network ganache
+
 ```

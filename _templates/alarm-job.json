@@ -1,0 +1,21 @@
+{
+  "initiators": [
+    {
+      "type": "RunLog"
+    }
+  ],
+  "tasks": [
+    {
+      "type": "Sleep"
+    },
+    {
+      "type": "EthBool"
+    },
+    {
+      "type": "EthTx"
+    }
+  ],
+  "startAt": null,
+  "endAt": null,
+  "minPayment": "1000000000000000000"
+}

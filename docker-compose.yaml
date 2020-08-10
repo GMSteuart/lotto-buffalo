@@ -1,0 +1,165 @@
+version: "3.8"
+
+services:
+  chainlink:
+    build:
+      context: https://github.com/smartcontractkit/chainlink.git
+      dockerfile: core/chainlink.Dockerfile
+    # command: node start -d -p /run/secrets/node_password -a /run/secrets/apicredentials
+    entrypoint: ''
+    command: /bin/sh -c "chainlink node import /run/secrets/keystore && chainlink node start -d -p /run/secrets/node_password -a /run/secrets/apicredentials"
+    restart: always
+    environment:
+      CHAINLINK_DB_NAME: "node_dev"
+      CHAINLINK_DEV: "true"
+      CHAINLINK_PGPASSWORD: "node"
+      CHAINLINK_TLS_HOST: "localhost"
+      CHAINLINK_TLS_PORT: 6689
+      CHAINLINK_URL: "http://localhost:6688"
+      CLIENT_NODE_URL: "http://localhost:6688"
+      ETH_CHAIN_ID: 1337
+      ETH_URL: "ws://ganache:8545"
+      EXPLORER_URL: "ws://explorer:3001"
+      EXPLORER_ACCESS_KEY: "u4HULe0pj5xPyuvv"
+      EXPLORER_SECRET: "YDxkVRTmcliehGZPw7f0L2Td3sz3LqutAQyy7sLCEIP6xcWzbO8zgfBWi4DXC6U6"
+      LOG_LEVEL: "debug"
+      MINIMUM_CONTRACT_PAYMENT: 1000000000000
+      MIN_INCOMING_CONFIRMATIONS: 1
+      MIN_OUTGOING_CONFIRMATIONS: 1
+      RUST_BACKTRACE: 1
+      DEFAULT_HTTP_TIMEOUT: "5s"
+      ENABLE_EXPERIMENTAL_ADAPTERS: "true"
+    #   ENABLE_BULLETPROOF_TX_MANAGER: "true"
+      GAS_UPDATER_ENABLED: "true"
+      DATABASE_URL: "postgresql://postgres:node@db:5432/node_dev?sslmode=disable"
+      SECURE_COOKIES: "false"
+      TLS_CERT_PATH: "/root/tls/server.crt"
+      TLS_KEY_PATH: "/root/tls/server.key"
+      ALLOW_ORIGINS: "*"
+      ORACLE_CONTRACT_ADDRESS: "0x8886DB5440147798D27E8AB9c9090140b5cEcA47"
+      LINK_CONTRACT_ADDRESS: "0xF4d0e956464396cEBC998F60C0AB8720161fa4c2"
+    volumes:
+      - ./config/tls:/root/tls
+      - ./_templates/alarm-job.json:/root/jobs/alarm-job.json
+    ports:
+      - "6688:6688"
+      - "6689:6689"
+    depends_on:
+      - db
+      - ganache
+      - explorer
+    secrets:
+      - keystore
+      - node_password
+      - apicredentials
+
+  db:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_DB: node_dev
+      POSTGRES_PASSWORD: node
+      # Override the data location since `/var/lib/postgresql/data` is a defined
+      # volume by PostgreSQL
+      # PGDATA: /data
+    ports:
+      - "5432:5432"
+    volumes:
+      # Initialize database with a consistent job id
+      - ./data/db/backup.sql:/docker-entrypoint-initdb.d/init-db.sql
+    #   - db-data:/var/lib/postgresql/data
+
+  explorer:
+    image: chainlink/explorer
+    build:
+      context: https://github.com/smartcontractkit/chainlink.git
+      dockerfile: explorer/Dockerfile
+    entrypoint: yarn workspace @chainlink/explorer dev:compose
+    restart: always
+    ports:
+      - "8080:3001"
+    depends_on:
+      - chainlink-explorer-db
+    environment:
+      EXPLORER_COOKIE_SECRET: "YDxkVRTmcliehGZPw7f0L2Td3sz3LqutAQyy7sLCEIP6xcWzbO8zgfBWi4DXC6U6"
+      EXPLORER_SERVER_PORT: 3001
+      PGPASSWORD: "explorer"
+
+  ingester:
+    image: chainlink/ingester
+    build:
+      context: https://github.com/smartcontractkit/chainlink.git
+      dockerfile: ingester/ingester.Dockerfile
+    restart: always
+    depends_on:
+      - ganache
+      - chainlink
+      - explorer
+      - chainlink-explorer-db
+    environment:
+      ETH_CHAIN_ID: 1337
+      ETH_URL: "ws://ganache:8545"
+      DB_HOST: "chainlink-explorer-db"
+      DB_NAME: "explorer_dev"
+      DB_PORT: 5432
+      DB_USERNAME: "postgres"
+      DB_PASSWORD: "explorer"
+
+  chainlink-explorer-db:
+    image: postgres
+    container_name: chainlink-explorer-db
+    # volumes:
+    #   - explorer-db-data:/var/lib/postgresql/data
+    ports:
+      - 5433:5432
+    environment:
+      POSTGRES_DB: "explorer_dev"
+      POSTGRES_PASSWORD: "explorer"
+
+  # external-adapter:
+  #   container_name: external-adapter
+  #   image: smartcontract/external-adapter
+  #   build:
+  #     context: ../../
+  #     dockerfile: tools/external-adapter/Dockerfile
+  #   ports:
+  #     - '6644:6644'
+  #   environment:
+  #     - EXTERNAL_ADAPTER_PORT=$EXTERNAL_ADAPTER_PORT
+
+  ganache:
+    image: trufflesuite/ganache-cli
+    command: [
+      "node", "/app/ganache-core.docker.cli.js",
+      # For predictability
+      "--deterministic",
+      "--mnemonic", 
+      "result soon dose birth swap lonely street staff course snack frog path",
+      "--networkId", "1337",
+      # For persistance
+      "--acctKeys", "/app/data/keys/account-keys.json",
+      "--db", "/app/data/chain",
+      # For player testing
+      "--accounts", "16",
+      # Ensure node operator address exists
+    #   "--unlock", "0x7BEEA9C52881C83899C087B24d4f50A5aff3C7A0"
+    ]
+    volumes:
+      - ./data/ganache/keys:/app/data/keys
+    #   - ./data/ganache/chain:/app/data/chain
+    ports:
+      - "8545:8545"
+# Volumes currently commented out for faster development when resetting to clean
+# slate.
+volumes:
+  db-data:
+#   explorer-db-data:
+
+secrets:
+  keystore:
+    file: config/secrets/0xf4cfd1ab20d02a35dda8cda4fcb092bc3829ae22.json
+  # Decrypt keystore file
+  node_password:
+    file: config/secrets/password
+  apicredentials:
+    file: config/secrets/apicredentials

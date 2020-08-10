@@ -1,0 +1,23 @@
+{
+    "name": "lotto-buffalo-ui",
+    "version": "1.0.0",
+    "description": "",
+    "author": "Prime",
+    "private": true,
+    "scripts": {
+        "dev": "nuxt",
+        "build": "nuxt build",
+        "start": "nuxt start",
+        "generate": "nuxt generate"
+    },
+    "dependencies": {
+        "nuxt": "^2.14.1",
+        "primeflex": "^2.0.0-rc.1",
+        "primeicons": "4.0.0",
+        "primevue": "^2.0.7",
+        "vue": "^2.6.11",
+        "vue-web3": "^2.1.0",
+        "web3": "^1.2.11"
+    },
+    "devDependencies": {}
+}
